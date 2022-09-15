@@ -1,10 +1,10 @@
 name: Notify on Issue
 on:
-  issue:
+  issues:
     types: [opened]
 
 jobs:
-  slack_message:
+  issue_message:
     runs-on: ubuntu-latest
     steps:
       - name: Slack Message
