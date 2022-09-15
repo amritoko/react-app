@@ -8,12 +8,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      SURGE_LOGIN: ${{ secrets.SURGE_LOGIN}}
+      SURGE_TOKEN: ${{ secrets.SURGE_TOKEN}}
     steps:
       - uses: actions/checkout@v2
       - name: Use NodeJS
         uses: actions/setup-node@v1
         with:
-          node-version: "12.x"
+          node-version: "16.x"
       - name: Cache node_modules
         uses: actions/cache@v1
         with:
@@ -22,6 +25,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - run: npm ci
+      - run: npm run format
       - run: npm run format:check
       - run: npm test -- --coverage
         env:
@@ -40,14 +44,24 @@ jobs:
         with:
           name: build
           path: build
+      - name: ZIP Assets
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          zip -r build.zip ./build
+          zip -r coverage.zip ./coverage
       - name: Create a release
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: npx semantic-release
         env:
-          GITHUB_TOKEN: $ {{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.CUSTOM_TOKEN }}
       - name: Deploy to Staging
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         run: npx surge --project ./build --domain sable-paste.surge.sh
-        env:
-          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN}}
-          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN}}
+      - name: Deploy to Production
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: npx surge --project ./build --domain savory-geese.surge.sh
+      - name: Upload Coverage Reports
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: npx codecov
+        env: 
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN}}
