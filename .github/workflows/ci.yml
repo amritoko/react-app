@@ -22,7 +22,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - run: npm ci
-      - run: nmp run format
+      - run: npm run format
       - run: npm run format:check
       - run: npm test -- --coverage
         env:
