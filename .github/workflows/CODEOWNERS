@@ -1,0 +1,4 @@
+* @amritoko
+*.js @amritoko
+*.yml @amritoko
+/public/ @amritoko
